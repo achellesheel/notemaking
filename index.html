@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .note-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .note-card h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>My Notes</h1>
+    <form id="addNoteForm">
+        <input type="text" id="noteTitle" placeholder="Title" required />
+        <textarea id="noteContent" placeholder="Content" rows="4" required></textarea>
+        <button type="submit">Add Note</button>
+    </form>
+    <div id="notes">
+        {% for note in notes %}
+        <div class="note-card">
+            <h3>{{ note.title }}</h3>
+            <p>{{ note.content }}</p>
+            <button onclick="editNote('{{ note.title }}', '{{ note.content | escape }}')">Edit</button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        // Add a new note
+        document.getElementById("addNoteForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const title = document.getElementById("noteTitle").value;
+            const content = document.getElementById("noteContent").value;
+
+            fetch("/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, content })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || data.error);
+                    if (!data.error) location.reload();
+                });
+        });
+
+        // Edit a note
+        function editNote(title, content) {
+            const newContent = prompt(`Edit content for "${title}":`, content);
+            if (newContent !== null) {
+                fetch("/edit", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ title, content: newContent })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message || data.error);
+                        if (!data.error) location.reload();
+                    });
+            }
+        }
+    </script>
+</body>
+</html>
